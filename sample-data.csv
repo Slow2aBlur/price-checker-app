@@ -1,0 +1,21 @@
+ID,Product Name,Brand,SKU,Supplier,Regular Price,Sale Price
+1,Samsung 55" 4K Smart TV,Samsung,TV-55-4K,Electronics Plus,12999.99,10999.99
+2,Apple iPhone 15 Pro,Apple,IPH-15-PRO,Phone World,24999.99,22999.99
+3,Sony WH-1000XM5 Headphones,Sony,WH-1000XM5,Audio Pro,8999.99,7999.99
+4,Dell XPS 13 Laptop,Dell,XPS-13-2024,Computer Store,35999.99,32999.99
+5,Canon EOS R6 Mark II,Canon,EOS-R6-MKII,Camera Shop,45999.99,41999.99
+6,PlayStation 5 Console,Sony,PS5-CONSOLE,Gaming World,12999.99,11999.99
+7,MacBook Air M2,Apple,MBA-M2-2024,Apple Store,29999.99,27999.99
+8,Bose QuietComfort 45,Bose,QC-45-2024,Sound Systems,6999.99,5999.99
+9,GoPro Hero 11 Black,GoPro,HERO-11-BLACK,Action Cam,8999.99,7999.99
+10,Microsoft Surface Pro 9,Microsoft,SURFACE-PRO-9,Tablet Store,32999.99,29999.99
+11,Logitech MX Master 3S,Logitech,MX-MASTER-3S,Peripherals,2499.99,1999.99
+12,ASUS ROG Strix G15,ASUS,ROG-STRIX-G15,Gaming Laptops,25999.99,23999.99
+13,Beats Studio Pro,Beats,STUDIO-PRO-2024,Headphone World,5999.99,4999.99
+14,Nintendo Switch OLED,Nintendo,SWITCH-OLED,Gaming Store,7999.99,6999.99
+15,Google Pixel 8 Pro,Google,PIXEL-8-PRO,Mobile World,19999.99,17999.99
+16,HP Envy x360,HP,ENVY-X360-2024,Laptop Store,18999.99,16999.99
+17,JBL Flip 6 Speaker,JBL,FLIP-6-2024,Portable Audio,2999.99,2499.99
+18,Lenovo ThinkPad X1 Carbon,Lenovo,THINKPAD-X1-CARBON,Business Store,42999.99,39999.99
+19,Amazon Fire TV Stick 4K,Amazon,FIRE-TV-4K,Streaming Store,1499.99,1199.99
+20,WD My Passport 2TB,Western Digital,WD-MYPASS-2TB,Storage World,2999.99,2499.99

@@ -1,103 +1,118 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useMemo, useState } from 'react'
+import UploadDialog from '@/components/UploadDialog'
+import ProductTable from '@/components/ProductTable'
+import type { Product } from '@/types/Product'
+
+export default function HomePage() {
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [visibleProducts, setVisibleProducts] = useState<Product[]>([])
+
+  const handleParsed = (rows: Product[]) => {
+    setAllProducts(rows)
+    setVisibleProducts(sample15(rows))
+  }
+
+  const resample = () => {
+    if (allProducts.length) setVisibleProducts(sample15(allProducts))
+  }
+
+  const handleProductUpdate = (updated: Product[]) => {
+    setVisibleProducts(updated)
+  }
+
+  const total = useMemo(() => allProducts.length, [allProducts])
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="p-4 md:p-6 lg:p-8 print:p-0">
+      <header className="flex items-center justify-between gap-2 mb-3">
+        <div className="min-w-0">
+          <h1 className="text-base md:text-lg font-semibold leading-tight">Price Comparison Tool</h1>
+          {total > 0 && (
+            <p className="text-[11px] md:text-xs text-gray-600">
+              Loaded {total} products • Showing a random 15 each time
+            </p>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="flex gap-2 shrink-0 no-print">
+          <button
+            onClick={resample}
+            className="px-2 py-1 rounded border border-slate-300 hover:bg-slate-50 text-xs"
+          >
+            Re‑sample 15
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-900 text-xs"
+          >
+            Print to PDF
+          </button>
+        </div>
+      </header>
+
+      <div className="no-print">
+        <UploadDialog onDataParsed={handleParsed} />
+      </div>
+
+      {visibleProducts.length > 0 ? (
+        <>
+          <h2 className="text-sm font-semibold mb-2">Product Comparison ({visibleProducts.length} of {total})</h2>
+          <ProductTable
+            products={visibleProducts}
+            onProductUpdate={handleProductUpdate}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </>
+      ) : (
+        <HowTo />
+      )}
+
+      {/* Global compact + print styles */}
+      <style jsx global>{`
+        :root { --base-size: 12px; }
+        html, body { font-size: var(--base-size); }
+        @media (min-width: 1024px) { :root { --base-size: 12px; } }
+
+        /* Make tables compact everywhere */
+        table { font-size: 11px; }
+        th, td { padding: 6px 8px; }
+
+        /* Inputs/buttons compact */
+        input, button { font-size: 12px; }
+
+        /* Print rules: landscape, tighter margins, compact cells */
+        @media print {
+          @page { size: A4 landscape; margin: 8mm; }
+          body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .no-print { display: none !important; }
+          header { margin-bottom: 6px; }
+          table { font-size: 10px !important; }
+          th, td { padding: 4px 6px !important; }
+        }
+      `}</style>
+    </main>
+  )
+}
+
+function sample15<T>(arr: T[]) {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy.slice(0, 15)
+}
+
+function HowTo() {
+  return (
+    <div className="text-center text-gray-700">
+      <h3 className="text-sm font-semibold mb-2">How to use</h3>
+      <ol className="space-y-1 inline-block text-left text-xs">
+        <li>1) Click <b>Upload CSV File</b> and select today’s file</li>
+        <li>2) The app randomly selects 15 products</li>
+        <li>3) Enter competitor prices in the table</li>
+        <li>4) Click <b>Print to PDF</b>, then save and email manually</li>
+      </ol>
     </div>
-  );
+  )
 }

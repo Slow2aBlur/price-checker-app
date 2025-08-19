@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Price Comparison Tool
+
+A Next.js-based CSV price comparison tool that allows you to upload product data and compare prices across major South African retailers.
+
+## Features
+
+- **CSV Upload**: Drag & drop or browse to upload CSV files
+- **Price Comparison**: Compare your prices against 6 major retailers
+- **Editable Retail Prices**: Click on price cells to edit competitor prices
+- **Automatic Calculations**: 
+  - Lowest retail price highlighting
+  - Percentage differences from your regular and sale prices
+  - Random selection of 20 products for focused analysis
+- **Responsive Design**: Works on desktop and mobile devices
+- **Dark Mode Support**: Automatic dark/light theme detection
+
+## Required CSV Format
+
+Your CSV file must have these exact headers:
+
+```csv
+ID,Product Name,Brand,SKU,Supplier,Regular Price,Sale Price
+```
+
+### Example:
+```csv
+1,Samsung 55" 4K Smart TV,Samsung,TV-55-4K,Electronics Plus,12999.99,10999.99
+2,Apple iPhone 15 Pro,Apple,IPH-15-PRO,Phone World,24999.99,22999.99
+```
+
+## How to Use
+
+1. **Prepare your CSV file** with the required headers and product data
+2. **Upload the CSV** using the drag & drop interface or click to browse
+3. **Edit retail prices** by clicking on the price cells for each retailer:
+   - Makro
+   - Game
+   - HiFi Corp
+   - OK Furniture
+   - Takealot
+   - Incredible
+4. **View comparisons** - the tool automatically:
+   - Highlights the lowest retail price
+   - Calculates percentage differences from your prices
+   - Shows price variations across retailers
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. Upload your CSV file and start comparing prices!
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Sample Data
 
-## Learn More
+A `sample-data.csv` file is included with 20 sample products to test the tool.
 
-To learn more about Next.js, take a look at the following resources:
+## Technical Details
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS
+- **CSV Parsing**: PapaParse
+- **State Management**: React hooks (client-side only)
+- **TypeScript**: Full type safety
+- **Responsive**: Mobile-first design
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Data Privacy
 
-## Deploy on Vercel
+All data is processed client-side only. No files are uploaded to any server - everything stays on your device.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Browser Support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Works in all modern browsers that support:
+- ES6+ features
+- File API
+- Drag & Drop API
