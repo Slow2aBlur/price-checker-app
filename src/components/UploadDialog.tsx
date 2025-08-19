@@ -1,56 +1,134 @@
-'use client'
+"use client";
 
-import { ChangeEvent } from 'react'
-import Papa from 'papaparse'
-import type { Product } from '@/types/Product'
+import React, { useRef } from "react";
+import type { Row } from "./ProductTable";
 
-interface UploadDialogProps {
-  onDataParsed: (data: Product[]) => void
+const norm = (s: string) => (s || "").trim().toLowerCase();
+
+/** Recognised retailer headers (case/spacing tolerant) */
+const RETAILER_PATTERNS: { label: string; test: (h: string) => boolean }[] = [
+  { label: "Makro",                  test: (h) => /\bmakro\b/.test(h) },
+  { label: "HiFi Corp",              test: (h) => /\bhi[-\s]?fi\b.*\bcorp\b/.test(h) },
+  { label: "OK Furniture",           test: (h) => /\bok\b.*\bfurniture\b/.test(h) },
+  { label: "Game",                   test: (h) => /\bgame\b/.test(h) },
+  { label: "Incredible Connection",  test: (h) => /\bincredible\b.*\b(connection|conn)?\b/.test(h) },
+  { label: "Takealot",               test: (h) => /\btake[-\s]?alot\b/.test(h) },
+];
+
+/** CSV parser (handles quotes and commas in quotes) */
+function parseCSV(text: string): { headers: string[]; rows: string[][] } {
+  const rows: string[][] = [];
+  let i = 0, cur = "", inQ = false, row: string[] = [];
+  const pushCell = () => { row.push(cur); cur = ""; };
+  const pushRow  = () => { rows.push(row); row = []; };
+
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"' && text[i + 1] === '"') { cur += '"'; i += 2; continue; }
+      if (ch === '"') { inQ = false; i++; continue; }
+      cur += ch; i++; continue;
+    } else {
+      if (ch === '"') { inQ = true; i++; continue; }
+      if (ch === ",") { pushCell(); i++; continue; }
+      if (ch === "\n") { pushCell(); pushRow(); i++; continue; }
+      if (ch === "\r") { i++; continue; }
+      cur += ch; i++; continue;
+    }
+  }
+  pushCell(); if (row.length) pushRow();
+  const [headerRow, ...dataRows] = rows;
+  return { headers: headerRow ?? [], rows: dataRows ?? [] };
 }
 
-export default function UploadDialog({ onDataParsed }: UploadDialogProps) {
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+/** "R 1,234.56" or "145%" → numbers */
+function toNum(v?: string | null): number | undefined {
+  if (!v) return undefined;
+  const s = String(v).replace(/R/gi, "").replace(/[^0-9.\-]/g, "");
+  if (!s) return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+}
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data as any[]
-
-        const toNum = (v: any) => {
-          const n = parseFloat(String(v ?? '').replace(/[^\d.-]/g, ''))
-          return Number.isFinite(n) ? n : 0
-        }
-
-        // Map your CSV columns to our normalized Product shape
-        const cleaned: Product[] = rows
-          .filter(r => String(r['post_title'] ?? '').trim().length > 0)
-          .map((r, i) => ({
-            id: String(r['product_id'] ?? r['_sku'] ?? r['supplier_sku'] ?? i),
-            name: String(r['post_title'] ?? '').trim(),
-            brand: String(r['product_brand'] ?? '').trim(),
-            sku: String(r['_sku'] ?? r['supplier_sku'] ?? '').trim(),
-            supplier: String(r['Supplier'] ?? '').trim(),
-            regularPrice: toNum(r['_regular_price']),
-            salePrice: toNum(r['_sale_price']),
-          }))
-
-        onDataParsed(cleaned)
-      },
-      error: (err) => {
-        console.error('CSV Parse Error:', err)
-      },
-    })
+/** Find first header index by regex */
+function findByRegex(headersN: string[], patterns: RegExp[]): number {
+  for (const rx of patterns) {
+    const i = headersN.findIndex((h) => rx.test(h));
+    if (i !== -1) return i;
   }
+  return -1;
+}
+
+export default function UploadDialog({
+  onParsed,
+}: {
+  onParsed: (rows: Row[], fileName?: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const onPick = () => fileRef.current?.click();
+
+  const onChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const { headers, rows } = parseCSV(text);
+    const headersN = headers.map(norm);
+
+    // Map base fields (broad synonyms)
+    const idI = findByRegex(headersN, [/\b(product[_\s-]?id|post[_\s-]?id|^id)\b/]);
+    const nameI = findByRegex(headersN, [/\bpost[_\s-]?title\b/, /\b(product|product[_\s-]?name|name|title)\b/]);
+    const brandI = findByRegex(headersN, [/\bproduct[_\s-]?brand\b/, /\bbrand\b/]);
+    const skuI = findByRegex(headersN, [/\bproduct[_\s-]?sku\b/, /\bsupplier[_\s-]?sku\b/, /\bsku\b/]);
+    const supplierI = findByRegex(headersN, [/\bsupplier[_\s-]?name\b/, /\bbrand[_\s-]?supplier\b/, /\bsupplier\b/, /\bvendor\b/]);
+
+    const purchaseI = findByRegex(headersN, [
+      /\bpurchase[_\s-]?price\b/, /\bpurchase\b/, /\bcost\b/, /\bbuy\b/, /\bcost[_\s-]?price\b/
+    ]);
+    const regI = findByRegex(headersN, [
+      /\bregular[_\s-]?price\b/, /\bprice[_\s-]?reg\b/, /\brrp\b/, /\bretail\b/, /\bregular\b/
+    ]);
+    const saleI = findByRegex(headersN, [
+      /\bsale[_\s-]?price\b/, /\bprice[_\s-]?sale\b/, /\bsale\b/, /\bspecial\b/, /\bpromo\b/
+    ]);
+
+    // Retailers present in CSV (limit to known ones)
+    const retailerCols: { label: string; index: number }[] = [];
+    headersN.forEach((h, i) => {
+      for (const rp of RETAILER_PATTERNS) {
+        if (rp.test(h)) { retailerCols.push({ label: rp.label, index: i }); break; }
+      }
+    });
+
+    const out: Row[] = rows
+      .filter((r) => r.some((c) => c && c.trim() !== "")) // drop empty rows
+      .map((r, rowIdx) => {
+        const retailers: Record<string, number | undefined> = {};
+        retailerCols.forEach(({ label, index }) => {
+          retailers[label] = toNum(r[index]);
+        });
+
+        return {
+          id: (idI !== -1 ? r[idI] : "") || String(rowIdx + 1),
+          sku: skuI !== -1 ? r[skuI] : undefined,
+          name: nameI !== -1 ? r[nameI] : "(Unnamed)",
+          brand: brandI !== -1 ? r[brandI] : undefined,
+          supplier: supplierI !== -1 ? r[supplierI] : undefined,
+          purchasePrice: purchaseI !== -1 ? toNum(r[purchaseI]) : undefined,
+          regularPrice: regI !== -1 ? toNum(r[regI]) : undefined,
+          salePrice: saleI !== -1 ? toNum(r[saleI]) : undefined,
+          retailers,
+        };
+      });
+
+    onParsed(out, file.name);
+    e.target.value = ""; // allow re-uploading same file
+  };
 
   return (
-    <div className="mb-6">
-      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-800">
-        <span>Upload CSV File</span>
-        <input type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
-      </label>
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <input ref={fileRef} type="file" accept=".csv" onChange={onChange} hidden />
+      <button className="btn btn-primary no-print" onClick={onPick}>Upload CSV</button>
     </div>
-  )
+  );
 }
